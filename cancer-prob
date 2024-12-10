@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# hypothetical data for the calc
-# each row represents an example subject with the following attributes:
+# Hypothetical data for the calc
+# Each row represents an example subject with the following attributes:
 # [age, smoker (0 or 1), family history of cancer (0 or 1), exposure to hazardous materials (0 or 1), physical activity level (0 to 1)]
 data = np.array([
     [25, 0, 0, 0, 0.9],
@@ -12,63 +12,77 @@ data = np.array([
     [65, 1, 1, 0, 0.1]
 ])
 
-# the corresponding labels (1 if the subject developed terminal cancer, 0 otherwise)
+# The corresponding labels (1 if the subject developed terminal cancer, 0 otherwise)
 labels = np.array([0, 1, 0, 1, 1])
 
-# a simple logistic regression function
+
+# A simple sigmoid function
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def logistic_regression(X, y, lr=0.01, epochs=1000):
-    weights = np.zeros(X.shape[1])
-    bias = 0
 
-    for epoch in epochs:
+# A logistic regression training function
+def logistic_regression(X, y, lr=0.01, epochs=1000):
+    weights = np.zeros(X.shape[1])  # Initialize weights as zeros
+    bias = 0  # Initialize bias as zero
+
+    for _ in range(epochs):
+        # Calculate the linear model (weighted sum)
         linear_model = np.dot(X, weights) + bias
         y_predicted = sigmoid(linear_model)
-        
+
+        # Gradients
         dw = (1 / X.shape[0]) * np.dot(X.T, (y_predicted - y))
         db = (1 / X.shape[0]) * np.sum(y_predicted - y)
-        
+
+        # Update weights and bias
         weights -= lr * dw
         bias -= lr * db
-    
+
     return weights, bias
 
-# training the log. regression model
-weights, bias = logistic_regression(data, labels)
 
-# function to predict the chances of developing terminal cancer for a new subject
+# Train the logistic regression model
+# Select only age and smoking as features to simplify visualization
+features_to_use = data[:, [0, 1]]  # Select Age & Smoker data only
+weights, bias = logistic_regression(features_to_use, labels)
+
+# Function to predict the likelihood of developing terminal cancer
 def predict_chance(subject, weights, bias):
     linear_model = np.dot(subject, weights) + bias
     probability = sigmoid(linear_model)
     return probability
 
-# New subject's attributes
-new_subject = np.array([50, 1, 1, 1, 0.3])
 
-# running the calcs
+# Test with a new subject's data (age and smoking)
+new_subject = np.array([50, 1])  # 50 years old & a smoker
 chances = predict_chance(new_subject, weights, bias)
 print(f"Chances of developing terminal cancer: {chances * 100:.2f}%")
 
-# plotting the data and decision boundary for the func.
+
+# Plotting the data and decision boundary
 def plot_data_and_boundary(data, labels, weights, bias):
     plt.figure(figsize=(10, 6))
-    
+
+    # Scatter plot of data points
     for i, label in enumerate(labels):
         if label == 1:
-            plt.scatter(data[i][0], data[i][1], color='red', label='Cancer' if i == 0 else "")
+            plt.scatter(data[i, 0], data[i, 1], color='red', label='Cancer' if i == 0 else "")
         else:
-            plt.scatter(data[i][0], data[i][1], color='green', label='No Cancer' if i == 0 else "")
-    
-    # decision boundary code
+            plt.scatter(data[i, 0], data[i, 1], color='green', label='No Cancer' if i == 0 else "")
+
+    # Decision boundary calculation (only for 2D visualization)
     x_values = np.array([np.min(data[:, 0]), np.max(data[:, 0])])
-    y_values = -(weights[0] * x_values + bias) / weights[1]
-    
+    y_values = -(weights[0] * x_values + bias) / weights[1]  # Solve for decision boundary
+
+    # Plotting the decision boundary
     plt.plot(x_values, y_values, label='Decision Boundary')
     plt.xlabel('Age')
-    plt.ylabel('Smoker (0 or 1)')
+    plt.ylabel('Smoker Status')
     plt.legend()
+    plt.title('Cancer Prediction Decision Boundary')
     plt.show()
 
-plot_data_and_boundary(data, labels, weights, bias)
+
+# Plot the data and decision boundary
+plot_data_and_boundary(features_to_use, labels, weights, bias)
